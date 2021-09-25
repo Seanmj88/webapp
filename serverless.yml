@@ -1,51 +1,8 @@
-service:
-  name: website-app
+service: serverless-webApp
 
 provider:
   name: aws
   region: eu-west-1
-
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Codepipeline for web application
-
-# ------------------------- #
-# CloudFormation Parameters #
-# ------------------------- #
-
-Parameters:
-
-  CodeBuildEnvironmentComputeType:
-    Type: String
-    Default: BUILD_GENERAL1_SMALL
-    AllowedValues:
-      - BUILD_GENERAL1_SMALL
-      - BUILD_GENERAL1_MEDIUM
-      - BUILD_GENERAL1_LARGE
-
-  CodeBuildImage:
-    Description: The codebuild runtime image to use in the Codebuild project
-    Type: String
-    Default: "aws/codebuild/standard:2.0"
-
-  GithubRepoBranch:
-    Description: The git branch that will be polled for changes
-    Type: String
-    Default: "master"
-
-  GitHubOAuthToken:
-    NoEcho: 'true'  # Do not display in CloudFormation
-    Type: String
-    Default: ""
-
-  GithubRepoOwner:
-    Description: The owner of the repository on GitHub
-    Type: String
-    Default: "Seanmj88"
-
-  GithubRepo:
-    Description: The git repository base name
-    Type: String
-    Default: "webapp"
 
 # ------------------------ #
 # CloudFormation Resources #
@@ -56,7 +13,7 @@ resources:
   # S3 Bucket where website application will be hosted.
     S3WebsiteBucket:
       Type: AWS::S3::Bucket
-
+      
   # S3 Bucket Policy to only allow getObject for CloudFront
     S3WebsiteBucketPolicy:
       Type: AWS::S3::BucketPolicy
@@ -207,7 +164,7 @@ resources:
   CodeBuildProjectTest:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "test"
+      Name: "test"
       Description: CodePipeline standard build stage provider.
       Source:
         Type: CODEPIPELINE
@@ -215,25 +172,19 @@ resources:
       Artifacts:
         Type: CODEPIPELINE
       Cache:
-        Location: 
-          Fn::Join:
-            - /
-            - - Fn::GetAtt:
-                  - BuildArtifactBucket
-                  - Arn
-                  - '*'
+        Location: !Ref BuildArtifactBucket
         Type: S3
       TimeoutInMinutes: 5
       Environment:
-        ComputeType: !Ref CodeBuildEnvironmentComputeType
-        Image: !Ref CodeBuildImage
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/standard:2.0"
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt CodeBuildRole.Arn
 
   CodeBuildProjectDeploy:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "deploy"
+      Name: "deploy"
       Description: CodePipeline serverless deployer.
       Source:
         Type: CODEPIPELINE
@@ -242,12 +193,14 @@ resources:
         Type: CODEPIPELINE
       TimeoutInMinutes: 10
       Environment:
-        ComputeType: !Ref CodeBuildEnvironmentComputeType
-        Image: !Ref CodeBuildImage
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/standard:2.0"
         Type: LINUX_CONTAINER
         EnvironmentVariables:
           - Name: S3_BUCKET
             Value: !Ref S3WebsiteBucket
+          - Name: CLOUDFRONT_DISTRIBUTION_ID
+            Value: !Ref WebAppCloudFront
       ServiceRole: !GetAtt CodeBuildRole.Arn
 
   # Pipeline for running build.
@@ -272,10 +225,10 @@ resources:
                 Provider: GitHub
                 Version: '1'
               Configuration:
-                Owner: !Ref GithubRepoOwner
-                Repo: !Ref GithubRepo
-                Branch: !Ref GithubRepoBranch
-                OAuthToken: !Ref GitHubOAuthToken
+                Owner: "Seanmj88"
+                Repo: "webapp"
+                Branch: "Master"
+                OAuthToken: "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"
               OutputArtifacts:
                 - Name: SourceOutput
 
