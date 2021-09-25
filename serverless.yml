@@ -2,7 +2,7 @@ service: serverless-webApp
 
 provider:
   name: aws
-  region: eu-west-1
+  region: eu-west-2
 
 # ------------------------ #
 # CloudFormation Resources #
@@ -13,6 +13,9 @@ resources:
   # S3 Bucket where website application will be hosted.
     S3WebsiteBucket:
       Type: AWS::S3::Bucket
+      Properties:
+        BucketName: Sean-WebApp-Test-Bucket
+      
       
   # S3 Bucket Policy to only allow getObject for CloudFront
     S3WebsiteBucketPolicy:
@@ -87,6 +90,8 @@ resources:
   # S3 Bucket where build artifacts and cache will be uploaded.
   BuildArtifactBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      BucketName: Sean-CodeBuildPipeline-Test-Bucket
 
   # IAM role for codebuild project. Should give access to all AWS resources required.
   CodeBuildRole:
@@ -214,7 +219,6 @@ resources:
       RestartExecutionOnUpdate: false
       RoleArn: !GetAtt CodePipelineRole.Arn
       Stages:
-
         - Name: Source
           Actions:
             - Name: Source
