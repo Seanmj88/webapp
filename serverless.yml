@@ -180,9 +180,13 @@ resources:
                   - s3:GetObjectVersion
                   - s3:PutObject
                   - s3:PutObjectAcl
-                Resource:
-                  - !Sub "arn:aws:s3:::${BuildArtifactBucket}"
-                  - !Sub "arn:aws:s3:::${BuildArtifactBucket}/*"
+                Resource: 
+                  Fn::Join:
+                    - /
+                    - - Fn::GetAtt:
+                          - BuildArtifactBucket
+                          - Arn
+                      - '*'
               - Sid: CodeBuildAccessPolicy
                 Effect: Allow
                 Action:
@@ -203,7 +207,7 @@ resources:
   CodeBuildProjectTest:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "${ShortName}-test"
+      Name: !Sub "test"
       Description: CodePipeline standard build stage provider.
       Source:
         Type: CODEPIPELINE
@@ -211,7 +215,13 @@ resources:
       Artifacts:
         Type: CODEPIPELINE
       Cache:
-        Location: !Sub "arn:aws:s3:::${BuildArtifactBucket}"
+        Location: 
+          Fn::Join:
+            - /
+            - - Fn::GetAtt:
+                  - BuildArtifactBucket
+                  - Arn
+                  - '*'
         Type: S3
       TimeoutInMinutes: 5
       Environment:
@@ -223,7 +233,7 @@ resources:
   CodeBuildProjectDeploy:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub "${AWS::StackName}-deploy"
+      Name: !Sub "deploy"
       Description: CodePipeline serverless deployer.
       Source:
         Type: CODEPIPELINE
@@ -244,7 +254,7 @@ resources:
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub "${AWS::StackName}"
+      Name: "Webapp-codepipeline"
       ArtifactStore:
         Location: !Ref BuildArtifactBucket
         Type: S3
@@ -298,62 +308,3 @@ resources:
                 ProjectName: !Ref CodeBuildProjectDeploy
               InputArtifacts:
                 - Name: TestOutput
-
-  ### Notifications
-
-  # Failure notifications
-  CodePipelineStateFailureEventRule:
-    Type: "AWS::Events::Rule"
-    Properties:
-      Description: "Rule for sending failure notifications to SNS topic"
-      EventPattern:
-        source:
-          - aws.codepipeline
-        detail-type:
-          - CodePipeline Action Execution State Change
-        detail:
-          pipeline:
-            - !Ref CodePipeline
-          stage:
-            - Deploy
-            - Test
-            - Source
-          state:
-            - FAILED
-      State: "ENABLED"
-      Targets:
-        - Arn: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:CodebuildNotifications"
-          Id: "CodePipelineFailureNotifications"
-          InputTransformer:
-            InputTemplate: !Sub '"${ENV} <stage> stage has <state> for <pipeline> pipeline! Pipeline view: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${AWS::StackName}/view"'
-            InputPathsMap:
-              pipeline: "$.detail.pipeline"
-              stage: "$.detail.stage"
-              state: "$.detail.state"
-  # Successful deployment notifications
-  CodePipelineSuccessfulDeployEventRule:
-    Type: "AWS::Events::Rule"
-    Properties:
-      Description: "Rule for sending failure notifications to SNS topic"
-      EventPattern:
-        source:
-          - aws.codepipeline
-        detail-type:
-          - CodePipeline Stage Execution State Change
-        detail:
-          pipeline:
-            - !Ref CodePipeline
-          stage:
-            - Deploy
-          state:
-            - SUCCEEDED
-      State: "ENABLED"
-      Targets:
-        - Arn: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:CodebuildNotifications"
-          Id: "CodePipelineSuccessfulDeployNotifications"
-          InputTransformer:
-            InputTemplate: !Sub '"${ENV} <stage> stage has <state> for <pipeline> pipeline! Pipeline view: https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${AWS::StackName}/view"'
-            InputPathsMap:
-              pipeline: "$.detail.pipeline"
-              stage: "$.detail.stage"
-              state: "$.detail.state"
