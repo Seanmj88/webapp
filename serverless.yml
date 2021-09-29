@@ -196,7 +196,7 @@ resources:
         Cache:
           Location: !Ref BuildArtifactBucket
           Type: S3
-        TimeoutInMinutes: 5
+        TimeoutInMinutes: 10
         Environment:
           ComputeType: BUILD_GENERAL1_SMALL
           Image: "aws/codebuild/standard:2.0"
