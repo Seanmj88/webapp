@@ -133,6 +133,21 @@ resources:
                             - BuildArtifactBucket
                             - Arn
                         - '*'
+                - Sid: S3WebAccessPolicy
+                  Effect: Allow
+                  Action:
+                    - S3:List*
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:PutObject
+                    - s3:PutObjectAcl
+                  Resource: 
+                    Fn::Join:
+                      - /
+                      - - Fn::GetAtt:
+                            - S3WebsiteBucket
+                            - Arn
+                        - '*'
 
     # IAM role for CodePipeline.
     CodePipelineRole:
