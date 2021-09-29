@@ -265,7 +265,7 @@ resources:
                   Branch: "master"
                   OAuthToken: "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"
                 OutputArtifacts:
-                  - Name: SourceOutput
+                  - Name: TestOutput
 
           - Name: Test
             Actions:
@@ -295,4 +295,4 @@ resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
                 InputArtifacts:
-                  - Name: SourceOutput
+                  - Name: TestOutput
