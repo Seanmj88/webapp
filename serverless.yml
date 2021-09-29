@@ -118,6 +118,11 @@ resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: "*"
+                - Sid: CloudFrontPolicy
+                  Effect: Allow
+                  Action:
+                    - cloudfront:CreateInvalidation
+                  Resource: "*"
                 - Sid: S3AccessPolicy
                   Effect: Allow
                   Action:
