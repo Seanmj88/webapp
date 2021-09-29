@@ -295,4 +295,4 @@ resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
                 InputArtifacts:
-                  - Name: TestOutput
+                  - Name: SourceOutput
