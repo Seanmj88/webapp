@@ -118,6 +118,21 @@ resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: "*"
+                - Sid: S3AccessPolicy
+                  Effect: Allow
+                  Action:
+                    - S3:List*
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:PutObject
+                    - s3:PutObjectAcl
+                  Resource: 
+                    Fn::Join:
+                      - /
+                      - - Fn::GetAtt:
+                            - BuildArtifactBucket
+                            - Arn
+                        - '*'
 
     # IAM role for CodePipeline.
     CodePipelineRole:
@@ -234,7 +249,7 @@ resources:
                   Owner: "Seanmj88"
                   Repo: "webapp"
                   Branch: "master"
-                  OAuthToken: "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"
+                  OAuthToken: "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"
                 OutputArtifacts:
                   - Name: SourceOutput
 
