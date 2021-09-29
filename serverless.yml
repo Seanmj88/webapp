@@ -270,21 +270,21 @@ resources:
                 OutputArtifacts:
                   - Name: SourceOutput
 
-          - Name: Test
-            Actions:
-              - Name: Test
-                RunOrder: 1
-                ActionTypeId:
-                  Category: Test
-                  Owner: AWS
-                  Provider: CodeBuild
-                  Version: '1'
-                Configuration:
-                  ProjectName: !Ref CodeBuildProjectTest
-                InputArtifacts:
-                  - Name: SourceOutput
-                OutputArtifacts:
-                  - Name: TestOutput
+          # - Name: Test
+          #   Actions:
+          #     - Name: Test
+          #       RunOrder: 1
+          #       ActionTypeId:
+          #         Category: Test
+          #         Owner: AWS
+          #         Provider: CodeBuild
+          #         Version: '1'
+          #       Configuration:
+          #         ProjectName: !Ref CodeBuildProjectTest
+          #       InputArtifacts:
+          #         - Name: SourceOutput
+          #       OutputArtifacts:
+          #         - Name: TestOutput
 
           - Name: Deploy
             Actions:
@@ -298,4 +298,4 @@ resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildProjectDeploy
                 InputArtifacts:
-                  - Name: TestOutput
+                  - Name: SourceOutput
