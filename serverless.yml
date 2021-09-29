@@ -190,7 +190,7 @@ resources:
         Description: CodePipeline standard build stage provider.
         Source:
           Type: CODEPIPELINE
-          BuildSpec: test.yml
+          BuildSpec: buildspec/test.yml
         Artifacts:
           Type: CODEPIPELINE
         Cache:
@@ -210,7 +210,7 @@ resources:
         Description: CodePipeline serverless deployer.
         Source:
           Type: CODEPIPELINE
-          BuildSpec: deploy.yml
+          BuildSpec: buildspec/deploy.yml
         Artifacts:
           Type: CODEPIPELINE
         TimeoutInMinutes: 10
@@ -225,7 +225,21 @@ resources:
               Value: !Ref WebAppCloudFront
         ServiceRole: !GetAtt CodeBuildRole.Arn
 
-    # Pipeline for running build.
+    # Pipeline for running build and webhook to trigger codepipeline
+    CodePipelineWebhook:
+      Type: AWS::CodePipeline::Webhook
+      Properties:
+        Authentication: GITHUB_HMAC
+        AuthenticationConfiguration:
+          SecretToken: '254ea548e2e2285e7ab812b16ac8e357c45841a4'
+        Filters:
+          - JsonPath: $.ref
+            MatchEquals: 'refs/heads/{Branch}'
+        TargetPipeline: !Ref CodePipeline
+        TargetAction: Source
+        TargetPipelineVersion: !GetAtt CodePipeline.Version
+        RegisterWithThirdParty: true
+
     CodePipeline:
       Type: AWS::CodePipeline::Pipeline
       Properties:
