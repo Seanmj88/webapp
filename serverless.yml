@@ -233,7 +233,7 @@ resources:
                 Configuration:
                   Owner: "Seanmj88"
                   Repo: "webapp"
-                  Branch: "Master"
+                  Branch: "master"
                   OAuthToken: "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"
                 OutputArtifacts:
                   - Name: SourceOutput
