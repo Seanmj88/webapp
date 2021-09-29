@@ -213,6 +213,9 @@ resources:
           BuildSpec: buildspec/deploy.yml
         Artifacts:
           Type: CODEPIPELINE
+        Cache:
+          Location: !Ref BuildArtifactBucket
+          Type: S3
         TimeoutInMinutes: 10
         Environment:
           ComputeType: BUILD_GENERAL1_SMALL
@@ -265,7 +268,7 @@ resources:
                   Branch: "master"
                   OAuthToken: "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"
                 OutputArtifacts:
-                  - Name: TestOutput
+                  - Name: SourceOutput
 
           - Name: Test
             Actions:
