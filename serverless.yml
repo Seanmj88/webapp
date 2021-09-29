@@ -104,6 +104,7 @@ resources:
               Action: sts:AssumeRole
               Principal:
                 Service: codebuild.amazonaws.com
+        PermissionsBoundary : arn:aws:iam::615196324256:policy/dog-policy-policy-boundary
         Policies:
           - PolicyName: CloudwatchPolicy
             PolicyDocument:
@@ -129,6 +130,7 @@ resources:
               Action: sts:AssumeRole
               Principal:
                 Service: codepipeline.amazonaws.com
+        PermissionsBoundary : arn:aws:iam::615196324256:policy/dog-policy-policy-boundary
         Policies:
           - PolicyName: S3Policy
             PolicyDocument:
