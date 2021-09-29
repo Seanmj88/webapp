@@ -14,7 +14,7 @@ resources:
     S3WebsiteBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: Sean-WebApp-Test-Bucket
+        BucketName: sean-webapp-test-bucket
       
       
   # S3 Bucket Policy to only allow getObject for CloudFront
@@ -87,181 +87,181 @@ resources:
           ViewerCertificate:
             CloudFrontDefaultCertificate: true
 
-  # S3 Bucket where build artifacts and cache will be uploaded.
-  BuildArtifactBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: Sean-CodeBuildPipeline-Test-Bucket
+    # S3 Bucket where build artifacts and cache will be uploaded.
+    BuildArtifactBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: sean-codebuildpipeline-test-bucket
 
-  # IAM role for codebuild project. Should give access to all AWS resources required.
-  CodeBuildRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service: codebuild.amazonaws.com
-      Policies:
-        - PolicyName: CloudwatchPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              # Allow code build to stream logs
-              - Sid: CloudWatchLogsPolicy
-                Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: "*"
+    # IAM role for codebuild project. Should give access to all AWS resources required.
+    CodeBuildRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: sts:AssumeRole
+              Principal:
+                Service: codebuild.amazonaws.com
+        Policies:
+          - PolicyName: CloudwatchPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                # Allow code build to stream logs
+                - Sid: CloudWatchLogsPolicy
+                  Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "*"
 
-  # IAM role for CodePipeline.
-  CodePipelineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service: codepipeline.amazonaws.com
-      Policies:
-        - PolicyName: S3Policy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: S3AccessPolicy
-                Effect: Allow
-                Action:
-                  - S3:List*
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:PutObject
-                  - s3:PutObjectAcl
-                Resource: 
-                  Fn::Join:
-                    - /
-                    - - Fn::GetAtt:
-                          - BuildArtifactBucket
-                          - Arn
-                      - '*'
-              - Sid: CodeBuildAccessPolicy
-                Effect: Allow
-                Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                Resource:
-                  - !GetAtt CodeBuildProjectTest.Arn
-                  - !GetAtt CodeBuildProjectDeploy.Arn
-              - Sid: EventsAccessPolicy
-                Effect: Allow
-                Action: events:PutEvents
-                Resource: "*"
-              - Effect: Allow
-                Action: iam:PassRole
-                Resource: "*"
+    # IAM role for CodePipeline.
+    CodePipelineRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: sts:AssumeRole
+              Principal:
+                Service: codepipeline.amazonaws.com
+        Policies:
+          - PolicyName: S3Policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Sid: S3AccessPolicy
+                  Effect: Allow
+                  Action:
+                    - S3:List*
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:PutObject
+                    - s3:PutObjectAcl
+                  Resource: 
+                    Fn::Join:
+                      - /
+                      - - Fn::GetAtt:
+                            - BuildArtifactBucket
+                            - Arn
+                        - '*'
+                - Sid: CodeBuildAccessPolicy
+                  Effect: Allow
+                  Action:
+                    - codebuild:BatchGetBuilds
+                    - codebuild:StartBuild
+                  Resource:
+                    - !GetAtt CodeBuildProjectTest.Arn
+                    - !GetAtt CodeBuildProjectDeploy.Arn
+                - Sid: EventsAccessPolicy
+                  Effect: Allow
+                  Action: events:PutEvents
+                  Resource: "*"
+                - Effect: Allow
+                  Action: iam:PassRole
+                  Resource: "*"
 
-  ### Codebuild projects
-  CodeBuildProjectTest:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: "test"
-      Description: CodePipeline standard build stage provider.
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: test.yml
-      Artifacts:
-        Type: CODEPIPELINE
-      Cache:
-        Location: !Ref BuildArtifactBucket
-        Type: S3
-      TimeoutInMinutes: 5
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/standard:2.0"
-        Type: LINUX_CONTAINER
-      ServiceRole: !GetAtt CodeBuildRole.Arn
+    ### Codebuild projects
+    CodeBuildProjectTest:
+      Type: AWS::CodeBuild::Project
+      Properties:
+        Name: "test"
+        Description: CodePipeline standard build stage provider.
+        Source:
+          Type: CODEPIPELINE
+          BuildSpec: test.yml
+        Artifacts:
+          Type: CODEPIPELINE
+        Cache:
+          Location: !Ref BuildArtifactBucket
+          Type: S3
+        TimeoutInMinutes: 5
+        Environment:
+          ComputeType: BUILD_GENERAL1_SMALL
+          Image: "aws/codebuild/standard:2.0"
+          Type: LINUX_CONTAINER
+        ServiceRole: !GetAtt CodeBuildRole.Arn
 
-  CodeBuildProjectDeploy:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: "deploy"
-      Description: CodePipeline serverless deployer.
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: deploy.yml
-      Artifacts:
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/standard:2.0"
-        Type: LINUX_CONTAINER
-        EnvironmentVariables:
-          - Name: S3_BUCKET
-            Value: !Ref S3WebsiteBucket
-          - Name: CLOUDFRONT_DISTRIBUTION_ID
-            Value: !Ref WebAppCloudFront
-      ServiceRole: !GetAtt CodeBuildRole.Arn
+    CodeBuildProjectDeploy:
+      Type: AWS::CodeBuild::Project
+      Properties:
+        Name: "deploy"
+        Description: CodePipeline serverless deployer.
+        Source:
+          Type: CODEPIPELINE
+          BuildSpec: deploy.yml
+        Artifacts:
+          Type: CODEPIPELINE
+        TimeoutInMinutes: 10
+        Environment:
+          ComputeType: BUILD_GENERAL1_SMALL
+          Image: "aws/codebuild/standard:2.0"
+          Type: LINUX_CONTAINER
+          EnvironmentVariables:
+            - Name: S3_BUCKET
+              Value: !Ref S3WebsiteBucket
+            - Name: CLOUDFRONT_DISTRIBUTION_ID
+              Value: !Ref WebAppCloudFront
+        ServiceRole: !GetAtt CodeBuildRole.Arn
 
-  # Pipeline for running build.
-  CodePipeline:
-    Type: AWS::CodePipeline::Pipeline
-    Properties:
-      Name: "Webapp-codepipeline"
-      ArtifactStore:
-        Location: !Ref BuildArtifactBucket
-        Type: S3
-      RestartExecutionOnUpdate: false
-      RoleArn: !GetAtt CodePipelineRole.Arn
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: Source
-              RunOrder: 1
-              ActionTypeId:
-                Category: Source
-                Owner: ThirdParty
-                Provider: GitHub
-                Version: '1'
-              Configuration:
-                Owner: "Seanmj88"
-                Repo: "webapp"
-                Branch: "Master"
-                OAuthToken: "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"
-              OutputArtifacts:
-                - Name: SourceOutput
+    # Pipeline for running build.
+    CodePipeline:
+      Type: AWS::CodePipeline::Pipeline
+      Properties:
+        Name: "Webapp-codepipeline"
+        ArtifactStore:
+          Location: !Ref BuildArtifactBucket
+          Type: S3
+        RestartExecutionOnUpdate: false
+        RoleArn: !GetAtt CodePipelineRole.Arn
+        Stages:
+          - Name: Source
+            Actions:
+              - Name: Source
+                RunOrder: 1
+                ActionTypeId:
+                  Category: Source
+                  Owner: ThirdParty
+                  Provider: GitHub
+                  Version: '1'
+                Configuration:
+                  Owner: "Seanmj88"
+                  Repo: "webapp"
+                  Branch: "Master"
+                  OAuthToken: "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"
+                OutputArtifacts:
+                  - Name: SourceOutput
 
-        - Name: Test
-          Actions:
-            - Name: Test
-              RunOrder: 1
-              ActionTypeId:
-                Category: Test
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              Configuration:
-                ProjectName: !Ref CodeBuildProjectTest
-              InputArtifacts:
-                - Name: SourceOutput
-              OutputArtifacts:
-                - Name: TestOutput
+          - Name: Test
+            Actions:
+              - Name: Test
+                RunOrder: 1
+                ActionTypeId:
+                  Category: Test
+                  Owner: AWS
+                  Provider: CodeBuild
+                  Version: '1'
+                Configuration:
+                  ProjectName: !Ref CodeBuildProjectTest
+                InputArtifacts:
+                  - Name: SourceOutput
+                OutputArtifacts:
+                  - Name: TestOutput
 
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              RunOrder: 1
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              Configuration:
-                ProjectName: !Ref CodeBuildProjectDeploy
-              InputArtifacts:
-                - Name: TestOutput
+          - Name: Deploy
+            Actions:
+              - Name: Deploy
+                RunOrder: 1
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Provider: CodeBuild
+                  Version: '1'
+                Configuration:
+                  ProjectName: !Ref CodeBuildProjectDeploy
+                InputArtifacts:
+                  - Name: TestOutput
